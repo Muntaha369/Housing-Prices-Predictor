@@ -4,6 +4,7 @@ const PredictButton = ({ values, fields, isComplete }) => {
   const [loading, setLoading] = useState(false);
   const [result, setResult]   = useState(null);
   const [error, setError]     = useState(null);
+  const [hovered, setHovered] = useState(false);
 
   const handlePredict = async () => {
     setLoading(true);
@@ -21,14 +22,14 @@ const PredictButton = ({ values, fields, isComplete }) => {
     });
 
     try {
-      const res = await fetch('http://localhost:5000/predict', {
+      const res = await fetch('http://localhost:8000/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
       const data = await res.json();
-      setResult(data.predicted_price ?? data.price ?? data.result ?? JSON.stringify(data));
+      setResult(data.prediction);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -50,6 +51,8 @@ const PredictButton = ({ values, fields, isComplete }) => {
         type="button"
         onClick={handlePredict}
         disabled={!isComplete || loading}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           padding: '18px 56px',
           borderRadius: 16,
@@ -58,33 +61,24 @@ const PredictButton = ({ values, fields, isComplete }) => {
           letterSpacing: '0.03em',
           border: 'none',
           cursor: isComplete && !loading ? 'pointer' : 'not-allowed',
-          transition: 'all 0.3s ease',
+          transition: 'transform 0.25s ease, box-shadow 0.25s ease, background 0.3s ease',
           position: 'relative',
           overflow: 'hidden',
           minWidth: 240,
+          transform: hovered && isComplete && !loading ? 'scale(1.04)' : 'scale(1)',
           ...(isComplete && !loading
             ? {
                 background: 'linear-gradient(135deg, #6366f1, #7c3aed)',
                 color: '#fff',
-                boxShadow: '0 8px 32px rgba(99,102,241,0.45)',
+                boxShadow: hovered
+                  ? '0 12px 40px rgba(99,102,241,0.65)'
+                  : '0 8px 32px rgba(99,102,241,0.45)',
               }
             : {
                 background: '#1e293b',
                 color: '#64748b',
                 border: '1px solid #334155',
               }),
-        }}
-        onMouseEnter={(e) => {
-          if (isComplete && !loading) {
-            e.currentTarget.style.transform = 'scale(1.04)';
-            e.currentTarget.style.boxShadow = '0 12px 40px rgba(99,102,241,0.65)';
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = isComplete
-            ? '0 8px 32px rgba(99,102,241,0.45)'
-            : 'none';
         }}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
@@ -155,7 +149,7 @@ const PredictButton = ({ values, fields, isComplete }) => {
         }}>
           <p style={{ color: '#f87171', fontSize: 14, marginBottom: 4 }}>⚠ {error}</p>
           <p style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
-            Make sure the Flask backend is running on port 5000.
+            Make sure the backend is running on port 8000.
           </p>
           <button onClick={handleReset} style={{
             background: 'none', border: 'none', color: '#6366f1',
