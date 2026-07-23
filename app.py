@@ -30,6 +30,12 @@ class HouseInput(BaseModel):
 model = joblib.load("Linear_model.pkl")
 encoders = joblib.load("encoders.pkl")
 
+print(encoders.items())
+
+for col,le in encoders.items():
+    print(col,le.classes_)
+
+
 @app.post("/predict")
 async def predict(data: HouseInput):
     row = data.dict()
